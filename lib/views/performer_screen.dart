@@ -1,0 +1,63 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../viewmodels/karaoke_view_model.dart';
+import '../database/database.dart';
+
+class PerformerScreen extends ConsumerWidget {
+  const PerformerScreen({super.key});
+
+  void _showAddDialog(BuildContext context, WidgetRef ref) {
+    final ctrl = TextEditingController();
+    showDialog(context: context, builder: (context) => AlertDialog(
+      title: const Text('인원 추가'),
+      content: TextField(controller: ctrl, decoration: const InputDecoration(hintText: '이름을 입력해!'), autofocus: true),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+        ElevatedButton(onPressed: () { if (ctrl.text.isNotEmpty) ref.read(performerViewModelProvider.notifier).addPerformer(ctrl.text); Navigator.pop(context); }, child: const Text('등록')),
+      ],
+    ));
+  }
+
+  void _showDeleteWarning(BuildContext context, WidgetRef ref, Performer p) {
+    showDialog(context: context, builder: (context) => AlertDialog(
+      title: const Text('정말 삭제할 거야?', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+      content: Text('"${p.name}"님을 삭제하면 이미 기록된 모든 노래에서 이 이름이 사라져 버릴 거야. 진짜 지울 거야?'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+        TextButton(
+          onPressed: () {
+            ref.read(performerViewModelProvider.notifier).removePerformer(p);
+            Navigator.pop(context);
+          },
+          child: const Text('응, 지워줘', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final performersAsync = ref.watch(performerViewModelProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('함께한 사람들')),
+      body: performersAsync.when(
+        data: (list) => ListView.builder(
+          itemCount: list.length,
+          itemBuilder: (context, index) {
+            final p = list[index];
+            return ListTile(
+              title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                onPressed: () => _showDeleteWarning(context, ref, p),
+              ),
+            );
+          },
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, s) => Center(child: Text('에러: $e')),
+      ),
+      floatingActionButton: FloatingActionButton(onPressed: () => _showAddDialog(context, ref), child: const Icon(Icons.person_add)),
+    );
+  }
+}
