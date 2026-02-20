@@ -1,17 +1,31 @@
-# karaoke_v2
+# 🎤 노래방 일지 관리 앱 v1.0.0
 
-A new Flutter project.
+드디어 노래방 일지 관리 앱의 첫 번째 버전이 출시되었습니다! 🎉
+이제 노래방에서의 애창곡과 기록들을 모바일과 PC에서 체계적으로 관리해 보세요.
 
-## Getting Started
+## ✨ 주요 기능 (Mobile)
 
-This project is a starting point for a Flutter application.
+* **노래 수동 추가 및 즐겨찾기**
+    * 제목, 가수, 번호, 최고음, 반주기 등 상세 정보를 직접 입력하여 노래를 추가할 수 있습니다.
+    * 추가된 노래는 내 **라이브러리**에 안전하게 보관되며, 자주 부르는 노래는 **즐겨찾기**에 등록해 빠르게 찾아보세요.
+* **날짜별 세션 기록**
+    * 새로운 날짜 세션을 생성하고, 라이브러리에서 노래를 불러와 그날의 열창 기록을 남길 수 있습니다.
+    * 해당 노래를 **누가 불렀는지(가창자)** 함께 추가하여 더욱 상세하게 관리하세요!
+* **통계 및 랭킹**
+    * 내가 **가장 많이 부른 노래의 순위**를 한눈에 파악할 수 있습니다.
+* **랜덤 노래 코스 제작**
+    * 오늘 뭘 부를지 고민되시나요? 내 라이브러리에 저장된 노래들을 기반으로 나만의 **랜덤 노래 코스**를 생성해 줍니다.
+* **데이터 보관**
+    * 소중한 기록을 잃어버리지 않도록 **백업 저장하기 및 불러오기** 기능을 지원합니다.
 
-A few resources to get you started if this is your first Flutter project:
+## 💻 주요 기능 (PC)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+* **모바일 핵심 기능 연동**
+    * 모바일 앱에서 즐기던 핵심적인 관리 기능들을 PC의 넓은 화면에서도 그대로 사용할 수 있습니다.
+* **데이터 백업 및 복구**
+    * PC 환경에서도 **백업 저장하기 및 불러오기**가 가능하여 데이터를 안전하게 관리할 수 있습니다.
+* **반주기 사이트 통합 검색**
+    * 각 반주기 브랜드 웹사이트와 연동하여 편리하게 **노래 번호와 정보를 검색**할 수 있습니다.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+💡 **설치 방법:** 아래 `Assets` 항목에서 기기에 맞는 설치 파일(APK 등)을 다운로드하여 실행해 주세요.
