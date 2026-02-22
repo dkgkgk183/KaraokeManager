@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'ui_state.g.dart';
@@ -46,4 +47,11 @@ class RecommendBrand extends _$RecommendBrand {
   @override
   String build() => 'TJ';
   void setBrand(String brand) => state = brand;
+}
+
+@Riverpod(keepAlive: true)
+class AppThemeMode extends _$AppThemeMode {
+  @override
+  ThemeMode build() => ThemeMode.system;
+  void setTheme(ThemeMode mode) => state = mode;
 }

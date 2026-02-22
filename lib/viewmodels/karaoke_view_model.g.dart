@@ -6,7 +6,7 @@ part of 'karaoke_view_model.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$libraryViewModelHash() => r'4155c0d83c287774b4381fc96139c2df08a0c230';
+String _$libraryViewModelHash() => r'0623a3d18feb601594d22e8610ea83754d869cec';
 
 /// See also [LibraryViewModel].
 @ProviderFor(LibraryViewModel)
@@ -25,7 +25,7 @@ final libraryViewModelProvider =
     );
 
 typedef _$LibraryViewModel = AutoDisposeAsyncNotifier<List<LibrarySong>>;
-String _$sessionViewModelHash() => r'856e2f9cb0b7a9b2a9eaa4c268603ceefb3e1fb0';
+String _$sessionViewModelHash() => r'd633e8c0d5b6ce577f7a54790f82ef7b466967c7';
 
 /// See also [SessionViewModel].
 @ProviderFor(SessionViewModel)
@@ -42,7 +42,7 @@ final sessionViewModelProvider =
 
 typedef _$SessionViewModel = AutoDisposeAsyncNotifier<List<Session>>;
 String _$performerViewModelHash() =>
-    r'3ebc0f6aeeab68bc45f065e73d48c191a9f13eb1';
+    r'441f3769bacddcf08a577003364a0f3cfaf0a403';
 
 /// See also [PerformerViewModel].
 @ProviderFor(PerformerViewModel)
@@ -62,7 +62,7 @@ final performerViewModelProvider =
 
 typedef _$PerformerViewModel = AutoDisposeAsyncNotifier<List<Performer>>;
 String _$sessionDetailViewModelHash() =>
-    r'2dd1e760f7e329af4cbf786a9d150d7645857fd8';
+    r'43ad668ae7081fc3d6a40ba78513d57ec6cb43b3';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -232,7 +232,7 @@ class _SessionDetailViewModelProviderElement
 }
 
 String _$dataManagementViewModelHash() =>
-    r'8e8100634288643e332a85bbfd515a9ffba57dba';
+    r'a1fc4806265965c608e79df943672db0a4b36927';
 
 /// See also [DataManagementViewModel].
 @ProviderFor(DataManagementViewModel)
@@ -249,7 +249,7 @@ final dataManagementViewModelProvider =
 
 typedef _$DataManagementViewModel = AutoDisposeNotifier<void>;
 String _$songRankingViewModelHash() =>
-    r'38f04328018692cba848777aa0b548c815bd6695';
+    r'1128a31cc06e5023c1034c7d9422c6805ae479c7';
 
 /// See also [SongRankingViewModel].
 @ProviderFor(SongRankingViewModel)

@@ -48,46 +48,91 @@ class Performers extends Table {
 @DriftDatabase(tables: [LibrarySongs, Sessions, SessionEntries, Performers])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+
   @override
   int get schemaVersion => 8;
 
-  Future<int> insertLibrarySong(LibrarySongsCompanion entry) => into(librarySongs).insert(entry, mode: InsertMode.insertOrReplace);
-  Future<List<LibrarySong>> getAllLibrarySongs() => (select(librarySongs)..orderBy([(t) => OrderingTerm(expression: t.title)])).get();
-  Future<bool> updateLibrarySong(LibrarySong song) => update(librarySongs).replace(song);
-  Future<int> deleteLibrarySong(String id) => (delete(librarySongs)..where((t) => t.id.equals(id))).go();
-  Future<void> updateSongHighlight(String id, bool value) => (update(librarySongs)..where((t) => t.id.equals(id))).write(LibrarySongsCompanion(isHighlighted: Value(value)));
+  // ── LibrarySongs ──────────────────────────────────────────
+  Future<int> insertLibrarySong(LibrarySongsCompanion entry) =>
+      into(librarySongs).insert(entry, mode: InsertMode.insertOrReplace);
 
-  Future<int> insertSession(SessionsCompanion entry) => into(sessions).insert(entry, mode: InsertMode.insertOrReplace);
-  Future<List<Session>> getAllSessions() => (select(sessions)..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])).get();
-  Future<bool> updateSession(Session session) => update(sessions).replace(session);
-  Future<int> deleteSession(String sessionId) async {
+  Future<List<LibrarySong>> getAllLibrarySongs() =>
+      (select(librarySongs)..orderBy([(t) => OrderingTerm(expression: t.title)])).get();
+
+  Future<bool> updateLibrarySong(LibrarySong song) =>
+      update(librarySongs).replace(song);
+
+  Future<int> deleteLibrarySong(String id) =>
+      (delete(librarySongs)..where((t) => t.id.equals(id))).go();
+
+  Future<void> updateSongHighlight(String id, bool value) =>
+      (update(librarySongs)..where((t) => t.id.equals(id)))
+          .write(LibrarySongsCompanion(isHighlighted: Value(value)));
+
+  // ── Sessions ──────────────────────────────────────────────
+  Future<int> insertSession(SessionsCompanion entry) =>
+      into(sessions).insert(entry, mode: InsertMode.insertOrReplace);
+
+  Future<List<Session>> getAllSessions() =>
+      (select(sessions)..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])).get();
+
+  Future<bool> updateSession(Session session) =>
+      update(sessions).replace(session);
+
+  /// 트랜잭션으로 세션 엔트리와 세션을 함께 삭제 (원자성 보장)
+  Future<int> deleteSession(String sessionId) => transaction(() async {
     await (delete(sessionEntries)..where((t) => t.sessionId.equals(sessionId))).go();
-    return await (delete(sessions)..where((t) => t.id.equals(sessionId))).go();
-  }
+    return (delete(sessions)..where((t) => t.id.equals(sessionId))).go();
+  });
 
-  Future<int> insertSessionEntry(SessionEntriesCompanion entry) => into(sessionEntries).insert(entry, mode: InsertMode.insertOrReplace);
-  Future<List<SessionEntry>> getAllSessionEntries() => select(sessionEntries).get();
-  Future<int> deleteSessionEntry(String id) => (delete(sessionEntries)..where((t) => t.id.equals(id))).go();
-  Future<void> updateEntryOrder(String id, int order) => (update(sessionEntries)..where((t) => t.id.equals(id))).write(SessionEntriesCompanion(sortOrder: Value(order)));
-  Future<void> updateEntryPerformer(String id, String name) => (update(sessionEntries)..where((t) => t.id.equals(id))).write(SessionEntriesCompanion(performer: Value(name)));
-  Future<void> clearPerformerNameFromEntries(String name) => (update(sessionEntries)..where((t) => t.performer.equals(name))).write(const SessionEntriesCompanion(performer: Value('')));
+  // ── SessionEntries ────────────────────────────────────────
+  Future<int> insertSessionEntry(SessionEntriesCompanion entry) =>
+      into(sessionEntries).insert(entry, mode: InsertMode.insertOrReplace);
 
-  Future<int> insertPerformer(PerformersCompanion entry) => into(performers).insert(entry, mode: InsertMode.insertOrReplace);
-  Future<List<Performer>> getAllPerformers() => (select(performers)..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
-  Future<int> deletePerformer(String id) => (delete(performers)..where((t) => t.id.equals(id))).go();
+  Future<List<SessionEntry>> getAllSessionEntries() =>
+      select(sessionEntries).get();
 
-  Future<void> clearAllData() async {
+  Future<int> deleteSessionEntry(String id) =>
+      (delete(sessionEntries)..where((t) => t.id.equals(id))).go();
+
+  Future<void> updateEntryOrder(String id, int order) =>
+      (update(sessionEntries)..where((t) => t.id.equals(id)))
+          .write(SessionEntriesCompanion(sortOrder: Value(order)));
+
+  Future<void> updateEntryPerformer(String id, String name) =>
+      (update(sessionEntries)..where((t) => t.id.equals(id)))
+          .write(SessionEntriesCompanion(performer: Value(name)));
+
+  Future<void> clearPerformerNameFromEntries(String name) =>
+      (update(sessionEntries)..where((t) => t.performer.equals(name)))
+          .write(const SessionEntriesCompanion(performer: Value('')));
+
+  // ── Performers ────────────────────────────────────────────
+  Future<int> insertPerformer(PerformersCompanion entry) =>
+      into(performers).insert(entry, mode: InsertMode.insertOrReplace);
+
+  Future<List<Performer>> getAllPerformers() =>
+      (select(performers)..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
+
+  Future<int> deletePerformer(String id) =>
+      (delete(performers)..where((t) => t.id.equals(id))).go();
+
+  // ── 전체 초기화 ───────────────────────────────────────────
+  /// 트랜잭션으로 모든 테이블을 한꺼번에 초기화 (원자성 보장)
+  Future<void> clearAllData() => transaction(() async {
     await delete(sessionEntries).go();
     await delete(sessions).go();
     await delete(librarySongs).go();
     await delete(performers).go();
-  }
+  });
 
+  // ── 조인 쿼리 ─────────────────────────────────────────────
   Selectable<TypedResult> getSessionWithSongs(String sId) {
-    final query = select(sessionEntries).join([innerJoin(librarySongs, librarySongs.id.equalsExp(sessionEntries.librarySongId))]);
-    query.where(sessionEntries.sessionId.equals(sId));
-    query.orderBy([OrderingTerm.asc(sessionEntries.sortOrder)]);
-    return query;
+    return (select(sessionEntries).join([
+      innerJoin(librarySongs, librarySongs.id.equalsExp(sessionEntries.librarySongId)),
+    ]))
+      ..where(sessionEntries.sessionId.equals(sId))
+      ..orderBy([OrderingTerm.asc(sessionEntries.sortOrder)]);
   }
 
   Selectable<TypedResult> getAllEntriesWithSongs() {
