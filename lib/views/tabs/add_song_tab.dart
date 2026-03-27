@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' show parse;
+import 'package:html/dom.dart' as dom;
 import '../../viewmodels/karaoke_view_model.dart';
 import '../../viewmodels/ui_state.dart';
 import '../../database/database.dart';
@@ -11,6 +14,14 @@ class AddSongTab extends ConsumerStatefulWidget {
 }
 
 bool _showOnlyHighlighted = false;
+
+class SongResult {
+  final String number;
+  final String title;
+  final String singer;
+  SongResult({required this.number, required this.title, required this.singer});
+}
+
 class _AddSongTabState extends ConsumerState<AddSongTab> {
   final List<String> _notes = ['~2옥타브 솔#', '2옥타브 라~시', '3옥타브 도~'];
 
@@ -34,10 +45,127 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
     return a.toLowerCase().compareTo(b.toLowerCase());
   }
 
+  String _getSmartText(dom.Node node) {
+    if (node.nodeType == dom.Node.TEXT_NODE) {
+      return node.text ?? '';
+    } else if (node.nodeType == dom.Node.ELEMENT_NODE) {
+      dom.Element el = node as dom.Element;
+      bool isInline = ['span', 'mark', 'b', 'strong', 'font', 'i', 'em', 'a'].contains(el.localName?.toLowerCase());
+
+      String inner = el.nodes.map((n) => _getSmartText(n)).join('');
+
+      if (isInline) {
+        return inner;
+      } else {
+        return ' | $inner | ';
+      }
+    }
+    return '';
+  }
+
+  Future<List<SongResult>> _searchKaraoke(String keyword) async {
+    final url = Uri.parse(
+        'https://www.tjmedia.com/song/accompaniment_search?pageNo=1&searchTxt=$keyword&strType=1');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var document = parse(response.body);
+        var songList = document.querySelectorAll('ul.chart-list-area > li');
+
+        List<SongResult> results = [];
+
+        for (var songLi in songList) {
+          String rawText = _getSmartText(songLi);
+          List<String> rawParts = rawText.split('|');
+
+          List<String> cleaned = [];
+          for (String part in rawParts) {
+            String text = part.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+            if (text.isEmpty) continue;
+            if (text == 'MR' || text == 'MV' || text.contains('반주기 전용곡')) continue;
+
+            text = text.replaceAll('곡번호', '').trim();
+            if (text.isEmpty) continue;
+
+            if ((text.startsWith('(') || text.startsWith('[')) && cleaned.isNotEmpty) {
+              cleaned[cleaned.length - 1] += ' $text';
+            } else {
+              cleaned.add(text);
+            }
+          }
+
+          if (cleaned.length >= 3) {
+            String number = cleaned[0];
+            String title = cleaned[1];
+            String singer = cleaned[2];
+
+            if (title == '곡제목' || singer == '가수') continue;
+
+            results.add(SongResult(number: number, title: title, singer: singer));
+          }
+        }
+        return results;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  void _showSearchResultsPopup(List<SongResult> results, Function(SongResult) onSelect) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('검색 결과', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: results.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final song = results[index];
+                return ListTile(
+                  title: Text(song.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle: Text(song.singer, style: const TextStyle(color: Colors.blueGrey, fontSize: 12)),
+                  trailing: Text(song.number, style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.bold, fontSize: 13)),
+                  onTap: () {
+                    onSelect(song);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('닫기'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showAddDialog() {
     final tCtrl = TextEditingController();
     final sCtrl = TextEditingController();
     final nCtrl = TextEditingController();
+    final searchCtrl = TextEditingController();
+
     String bVal = ref.read(selectedBrandProvider);
     String noteVal = _notes[0];
     String? tErr, sErr;
@@ -57,8 +185,8 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
                 s.highestNote == noteVal);
             setST(() {
               isDup = dup;
-              tErr = null;
-              sErr = null;
+              if (tCtrl.text.isNotEmpty) tErr = null;
+              if (sCtrl.text.isNotEmpty) sErr = null;
             });
           }
 
@@ -78,6 +206,49 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
                       Checkbox(value: bVal == 'KY', onChanged: (v) { setST(() => bVal = 'KY'); validate(); }),
                     ],
                   ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: searchCtrl,
+                          decoration: const InputDecoration(labelText: 'TJ 온라인 검색', isDense: true, hintText: '제목 또는 가수 입력'),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () async {
+                          if (searchCtrl.text.isEmpty) return;
+
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) => const Center(child: CircularProgressIndicator()),
+                          );
+
+                          final results = await _searchKaraoke(searchCtrl.text);
+
+                          if (mounted) Navigator.pop(context);
+
+                          if (results.isEmpty) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('검색 결과가 없어, 뜌땨!')));
+                            }
+                          } else {
+                            _showSearchResultsPopup(results, (selectedSong) {
+                              setST(() {
+                                tCtrl.text = selectedSong.title;
+                                sCtrl.text = selectedSong.singer;
+                                nCtrl.text = selectedSong.number;
+                                bVal = 'TJ';
+                                validate();
+                              });
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: tCtrl,
                     onChanged: (_) => validate(),
@@ -255,9 +426,8 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
               ? sortedSongs.where((s) => s.isHighlighted).toList()
               : sortedSongs;
           return ListView.builder(
-            itemCount: displaySongs.length + 1,  // ← +1 (하단 여백용)
+            itemCount: displaySongs.length + 1,
             itemBuilder: (context, index) {
-              // ← 마지막 아이템은 빈 여백
               if (index == displaySongs.length) {
                 return const SizedBox(height: 80);
               }
@@ -271,8 +441,8 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
                     color: song.isHighlighted ? Colors.yellow.withOpacity(0.3) : Colors.transparent,
                     border: Border(
                       bottom: BorderSide(
-                        color: Colors.grey.shade400,  // shade200 → shade400
-                        width: 1.0,                   // 0.5 → 1.0
+                        color: Colors.grey.shade400,
+                        width: 1.0,
                       ),
                     ),
                   ),
