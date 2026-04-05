@@ -361,3 +361,7 @@ class SongRankingViewModel extends _$SongRankingViewModel {
       });
   }
 }
+
+@riverpod
+Future<List<Session>> sessionsBySong(SessionsBySongRef ref, String songId) =>
+    database.getSessionsBySongId(songId);

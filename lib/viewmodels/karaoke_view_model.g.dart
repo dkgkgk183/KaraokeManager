@@ -6,6 +6,147 @@ part of 'karaoke_view_model.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$sessionsBySongHash() => r'a859c18811a859e14d2579865143325c3ae4d3de';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
+
+/// See also [sessionsBySong].
+@ProviderFor(sessionsBySong)
+const sessionsBySongProvider = SessionsBySongFamily();
+
+/// See also [sessionsBySong].
+class SessionsBySongFamily extends Family<AsyncValue<List<Session>>> {
+  /// See also [sessionsBySong].
+  const SessionsBySongFamily();
+
+  /// See also [sessionsBySong].
+  SessionsBySongProvider call(String songId) {
+    return SessionsBySongProvider(songId);
+  }
+
+  @override
+  SessionsBySongProvider getProviderOverride(
+    covariant SessionsBySongProvider provider,
+  ) {
+    return call(provider.songId);
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'sessionsBySongProvider';
+}
+
+/// See also [sessionsBySong].
+class SessionsBySongProvider extends AutoDisposeFutureProvider<List<Session>> {
+  /// See also [sessionsBySong].
+  SessionsBySongProvider(String songId)
+    : this._internal(
+        (ref) => sessionsBySong(ref as SessionsBySongRef, songId),
+        from: sessionsBySongProvider,
+        name: r'sessionsBySongProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$sessionsBySongHash,
+        dependencies: SessionsBySongFamily._dependencies,
+        allTransitiveDependencies:
+            SessionsBySongFamily._allTransitiveDependencies,
+        songId: songId,
+      );
+
+  SessionsBySongProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.songId,
+  }) : super.internal();
+
+  final String songId;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<Session>> Function(SessionsBySongRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: SessionsBySongProvider._internal(
+        (ref) => create(ref as SessionsBySongRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        songId: songId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<Session>> createElement() {
+    return _SessionsBySongProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SessionsBySongProvider && other.songId == songId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, songId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin SessionsBySongRef on AutoDisposeFutureProviderRef<List<Session>> {
+  /// The parameter `songId` of this provider.
+  String get songId;
+}
+
+class _SessionsBySongProviderElement
+    extends AutoDisposeFutureProviderElement<List<Session>>
+    with SessionsBySongRef {
+  _SessionsBySongProviderElement(super.provider);
+
+  @override
+  String get songId => (origin as SessionsBySongProvider).songId;
+}
+
 String _$libraryViewModelHash() => r'0623a3d18feb601594d22e8610ea83754d869cec';
 
 /// See also [LibraryViewModel].
@@ -63,27 +204,6 @@ final performerViewModelProvider =
 typedef _$PerformerViewModel = AutoDisposeAsyncNotifier<List<Performer>>;
 String _$sessionDetailViewModelHash() =>
     r'43ad668ae7081fc3d6a40ba78513d57ec6cb43b3';
-
-/// Copied from Dart SDK
-class _SystemHash {
-  _SystemHash._();
-
-  static int combine(int hash, int value) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + value);
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
-    return hash ^ (hash >> 6);
-  }
-
-  static int finish(int hash) {
-    // ignore: parameter_assignments
-    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
-    // ignore: parameter_assignments
-    hash = hash ^ (hash >> 11);
-    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
-  }
-}
 
 abstract class _$SessionDetailViewModel
     extends BuildlessAutoDisposeAsyncNotifier<List<Map<String, dynamic>>> {

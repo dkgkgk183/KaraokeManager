@@ -154,6 +154,18 @@ class AppDatabase extends _$AppDatabase {
     final results = await query.get();
     return results.map((row) => row.read(sessions.date)!).toList();
   }
+
+  Future<List<Session>> getSessionsBySongId(String songId) async {
+    final query = select(sessions).join([
+      innerJoin(sessionEntries, sessionEntries.sessionId.equalsExp(sessions.id)),
+    ])
+      ..where(sessionEntries.librarySongId.equals(songId))
+      ..groupBy([sessions.id])
+      ..orderBy([OrderingTerm.desc(sessions.date)]);
+
+    final results = await query.get();
+    return results.map((row) => row.readTable(sessions)).toList();
+  }
 }
 
 LazyDatabase _openConnection() {

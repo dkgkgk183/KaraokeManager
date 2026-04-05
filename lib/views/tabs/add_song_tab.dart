@@ -419,7 +419,52 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('정말 삭제할 거야?', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        content: Text('"${song.title}"을(를) 삭제하면 이 노래가 포함된 모든 세션의 기록도 함께 사라져! 진짜 지울 거야?'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('"${song.title}"을(를) 삭제하면 아래 세션들의 기록도 함께 사라져! 진짜 지울 거야?'),
+              const SizedBox(height: 10),
+              Flexible(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final sessionsAsync = ref.watch(sessionsBySongProvider(song.id));
+                    return sessionsAsync.when(
+                      data: (sessions) {
+                        if (sessions.isEmpty) return const Text('기록된 세션이 없어.', style: TextStyle(color: Colors.grey));
+                        return Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: sessions.length,
+                            separatorBuilder: (_, __) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final session = sessions[index];
+                              final dateStr = "${session.date.year}-${session.date.month.toString().padLeft(2, '0')}-${session.date.day.toString().padLeft(2, '0')}";
+                              final titleStr = session.title.isNotEmpty ? session.title : '제목 없음';
+                              return ListTile(
+                                visualDensity: VisualDensity.compact,
+                                title: Text(dateStr, style: const TextStyle(fontSize: 14)),
+                                subtitle: Text(titleStr, style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                      loading: () => const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator())),
+                      error: (e, s) => const Text('데이터를 불러오는데 실패했어.'),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
           TextButton(
