@@ -25,6 +25,25 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     return brand == 'TJ' ? Colors.purple : Colors.orange;
   }
 
+  Widget _buildStarRating(int rating) {
+    double starCount = rating / 2.0;
+    int fullStars = starCount.floor();
+    bool hasHalfStar = (starCount - fullStars) >= 0.5;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.orange, size: 28);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.orange, size: 28);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.orange, size: 28);
+        }
+      }),
+    );
+  }
+
   void _confirmDeleteSession(BuildContext context) {
     showDialog(context: context, builder: (context) => AlertDialog(
       title: const Text('세션 삭제'),
@@ -157,24 +176,25 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(children: List.generate(10, (i) {
-                  final score = i + 1;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: ChoiceChip(
-                      label: Text('$score'),
-                      selected: currentSession.rating == score,
-                      onSelected: (selected) {
-                        final newRating = (currentSession.rating == score) ? 0 : score;
-                        ref.read(sessionViewModelProvider.notifier).updateSessionInfo(currentSession.copyWith(rating: newRating));
-                      },
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  );
-                }))),
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildStarRating(currentSession.rating),
+                Slider(
+                  value: currentSession.rating.toDouble(),
+                  min: 0,
+                  max: 10,
+                  divisions: 10,
+                  activeColor: Colors.orange,
+                  onChanged: (double newValue) {
+                    ref.read(sessionViewModelProvider.notifier).updateSessionInfo(
+                        currentSession.copyWith(rating: newValue.toInt())
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
           const Divider(height: 1),
           Expanded(

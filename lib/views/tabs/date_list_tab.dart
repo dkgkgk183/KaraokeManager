@@ -23,6 +23,25 @@ class DateListTab extends ConsumerWidget {
     ));
   }
 
+  Widget _buildStarRating(int rating) {
+    double starCount = rating / 2.0;
+    int fullStars = starCount.floor();
+    bool hasHalfStar = (starCount - fullStars) >= 0.5;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.orange, size: 14);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.orange, size: 14);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.orange, size: 14);
+        }
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(sessionViewModelProvider);
@@ -37,7 +56,7 @@ class DateListTab extends ConsumerWidget {
             title: Row(children: [
               Text(DateFormat('yyyy년 M월 d일').format(session.date), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(width: 8),
-              if (session.rating > 0) Text('⭐${session.rating}', style: const TextStyle(fontSize: 13, color: Colors.orange)),
+              if (session.rating > 0) _buildStarRating(session.rating),
               const Spacer(),
               Text('$entries곡', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
             ]),
