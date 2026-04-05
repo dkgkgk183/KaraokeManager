@@ -12,6 +12,7 @@ class SongRankingScreen extends ConsumerStatefulWidget {
 class _SongRankingScreenState extends ConsumerState<SongRankingScreen> {
   bool _hideLowCount = false;
   bool _onlyLowCount = false;
+  bool _excludeOthers = true;
 
   @override
   Widget build(BuildContext context) {
@@ -23,27 +24,49 @@ class _SongRankingScreenState extends ConsumerState<SongRankingScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Wrap(
+              spacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.end,
               children: [
-                const Text('1회 이하 생략', style: TextStyle(fontSize: 11)),
-                Checkbox(
-                  visualDensity: VisualDensity.compact,
-                  value: _hideLowCount,
-                  onChanged: (v) => setState(() {
-                    _hideLowCount = v ?? false;
-                    if (_hideLowCount) _onlyLowCount = false;
-                  }),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('내가 부른 것만', style: TextStyle(fontSize: 11)),
+                    Checkbox(
+                      visualDensity: VisualDensity.compact,
+                      value: _excludeOthers,
+                      onChanged: (v) => setState(() => _excludeOthers = v ?? true),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                const Text('1회 이하만 보기', style: TextStyle(fontSize: 11)),
-                Checkbox(
-                  visualDensity: VisualDensity.compact,
-                  value: _onlyLowCount,
-                  onChanged: (v) => setState(() {
-                    _onlyLowCount = v ?? false;
-                    if (_onlyLowCount) _hideLowCount = false;
-                  }),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('1회 이하 생략', style: TextStyle(fontSize: 11)),
+                    Checkbox(
+                      visualDensity: VisualDensity.compact,
+                      value: _hideLowCount,
+                      onChanged: (v) => setState(() {
+                        _hideLowCount = v ?? false;
+                        if (_hideLowCount) _onlyLowCount = false;
+                      }),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('1회 이하만 보기', style: TextStyle(fontSize: 11)),
+                    Checkbox(
+                      visualDensity: VisualDensity.compact,
+                      value: _onlyLowCount,
+                      onChanged: (v) => setState(() {
+                        _onlyLowCount = v ?? false;
+                        if (_onlyLowCount) _hideLowCount = false;
+                      }),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -52,19 +75,31 @@ class _SongRankingScreenState extends ConsumerState<SongRankingScreen> {
           Expanded(
             child: rankingAsync.when(
               data: (list) {
-                final filtered = list.where((item) {
+                final displayList = list.map((item) {
+                  return {
+                    'title': item['title'],
+                    'singer': item['singer'],
+                    'count': _excludeOthers ? item['my_count'] : item['total_count'],
+                  };
+                }).where((item) {
                   final count = item['count'] as int;
+                  if (count == 0) return false;
                   if (_hideLowCount) return count > 1;
                   if (_onlyLowCount) return count <= 1;
                   return true;
                 }).toList();
 
-                if (filtered.isEmpty) return const Center(child: Text('표시할 데이터가 없어!'));
+                displayList.sort((a, b) {
+                  final countCompare = (b['count'] as int).compareTo(a['count'] as int);
+                  return countCompare != 0 ? countCompare : (a['title'] as String).compareTo(b['title'] as String);
+                });
+
+                if (displayList.isEmpty) return const Center(child: Text('표시할 데이터가 없어!'));
 
                 return ListView.builder(
-                  itemCount: filtered.length,
+                  itemCount: displayList.length,
                   itemBuilder: (context, index) {
-                    final item = filtered[index];
+                    final item = displayList[index];
                     return Container(
                       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
                       child: ListTile(
@@ -73,8 +108,8 @@ class _SongRankingScreenState extends ConsumerState<SongRankingScreen> {
                           backgroundColor: index < 3 ? Colors.amber : Colors.grey.shade300,
                           child: Text('${index + 1}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
-                        title: Text(item['title'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                        subtitle: Text(item['singer'], style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
+                        title: Text(item['title'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        subtitle: Text(item['singer'] as String, style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
                         trailing: Text('${item['count']}회', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo)),
                       ),
                     );

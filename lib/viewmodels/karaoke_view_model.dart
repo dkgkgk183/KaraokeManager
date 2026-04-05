@@ -343,22 +343,21 @@ class SongRankingViewModel extends _$SongRankingViewModel {
     final aggregation = <String, Map<String, dynamic>>{};
     for (final row in results) {
       final song = row.readTable(database.librarySongs);
+      final entry = row.readTable(database.sessionEntries);
       final key = '${song.title}_${song.originalSinger}';
       aggregation.putIfAbsent(key, () => {
         'title': song.title,
         'singer': song.originalSinger,
-        'count': 0,
+        'total_count': 0,
+        'my_count': 0,
       });
-      aggregation[key]!['count']++;
+      aggregation[key]!['total_count'] = (aggregation[key]!['total_count'] as int) + 1;
+      if (entry.performer.isEmpty) {
+        aggregation[key]!['my_count'] = (aggregation[key]!['my_count'] as int) + 1;
+      }
     }
 
-    return aggregation.values.toList()
-      ..sort((a, b) {
-        final countCompare = (b['count'] as int).compareTo(a['count']);
-        return countCompare != 0
-            ? countCompare
-            : (a['title'] as String).compareTo(b['title']);
-      });
+    return aggregation.values.toList();
   }
 }
 

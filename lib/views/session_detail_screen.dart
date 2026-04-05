@@ -25,22 +25,41 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     return brand == 'TJ' ? Colors.purple : Colors.orange;
   }
 
-  Widget _buildStarRating(int rating) {
-    double starCount = rating / 2.0;
+  void _updateRating(double dx, Session session, WidgetRef ref) {
+    if (dx < 0) dx = 0;
+    if (dx > 140) dx = 140;
+    int newRating = (dx / 14.0).ceil();
+    if (newRating > 10) newRating = 10;
+    if (newRating < 0) newRating = 0;
+
+    if (session.rating != newRating) {
+      ref.read(sessionViewModelProvider.notifier).updateSessionInfo(
+          session.copyWith(rating: newRating)
+      );
+    }
+  }
+
+  Widget _buildInteractiveStarRating(Session currentSession, WidgetRef ref) {
+    double starCount = currentSession.rating / 2.0;
     int fullStars = starCount.floor();
     bool hasHalfStar = (starCount - fullStars) >= 0.5;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(5, (index) {
-        if (index < fullStars) {
-          return const Icon(Icons.star, color: Colors.orange, size: 28);
-        } else if (index == fullStars && hasHalfStar) {
-          return const Icon(Icons.star_half, color: Colors.orange, size: 28);
-        } else {
-          return const Icon(Icons.star_border, color: Colors.orange, size: 28);
-        }
-      }),
+    return GestureDetector(
+      onTapDown: (details) => _updateRating(details.localPosition.dx, currentSession, ref),
+      onPanUpdate: (details) => _updateRating(details.localPosition.dx, currentSession, ref),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(5, (index) {
+          if (index < fullStars) {
+            return const Icon(Icons.star, color: Colors.orange, size: 28);
+          } else if (index == fullStars && hasHalfStar) {
+            return const Icon(Icons.star_half, color: Colors.orange, size: 28);
+          } else {
+            return const Icon(Icons.star_border, color: Colors.orange, size: 28);
+          }
+        }),
+      ),
     );
   }
 
@@ -176,25 +195,8 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildStarRating(currentSession.rating),
-                Slider(
-                  value: currentSession.rating.toDouble(),
-                  min: 0,
-                  max: 10,
-                  divisions: 10,
-                  activeColor: Colors.orange,
-                  onChanged: (double newValue) {
-                    ref.read(sessionViewModelProvider.notifier).updateSessionInfo(
-                        currentSession.copyWith(rating: newValue.toInt())
-                    );
-                  },
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: _buildInteractiveStarRating(currentSession, ref),
           ),
           const Divider(height: 1),
           Expanded(
