@@ -1,33 +1,34 @@
-# 🎤 노래방 일지 관리 앱 v1.0.0
+# 🎤 Karaoke Log Manager App v1.1.0
 
-**이 프로그램은 바이브 코딩을 이용하여 제작되었습니다.**
+**This program was created using Vibe Coding.**
 
-드디어 노래방 일지 관리 앱의 첫 번째 버전이 출시되었습니다! 🎉
-이제 노래방에서의 애창곡과 기록들을 모바일과 PC에서 체계적으로 관리해 보세요.
+The Karaoke Log Manager app has been updated to a much more convenient v1.1.0! 🎉
+Now you can systematically manage your favorite songs and records from the karaoke room on your mobile and PC, tailored to your taste.
 
-## ✨ 주요 기능 (Mobile)
+## ✨ Key Features (Mobile)
 
-* **노래 수동 추가 및 즐겨찾기**
-    * 제목, 가수, 번호, 최고음, 반주기 등 상세 정보를 직접 입력하여 노래를 추가할 수 있습니다.
-    * 추가된 노래는 내 **라이브러리**에 안전하게 보관되며, 자주 부르는 노래는 **즐겨찾기**에 등록해 빠르게 찾아보세요.
-* **날짜별 세션 기록**
-    * 새로운 날짜 세션을 생성하고, 라이브러리에서 노래를 불러와 그날의 열창 기록을 남길 수 있습니다.
-    * 해당 노래를 **누가 불렀는지(가창자)** 함께 추가하여 더욱 상세하게 관리하세요!
-* **통계 및 랭킹**
-    * 내가 **가장 많이 부른 노래의 순위**를 한눈에 파악할 수 있습니다.
-* **랜덤 노래 코스 제작**
-    * 오늘 뭘 부를지 고민되시나요? 내 라이브러리에 저장된 노래들을 기반으로 나만의 **랜덤 노래 코스**를 생성해 줍니다.
-* **데이터 보관**
-    * 소중한 기록을 잃어버리지 않도록 **백업 저장하기 및 불러오기** 기능을 지원합니다.
+* **Online Search (NEW!) & Manual Song Addition**
+    * You can search for songs directly from the online karaoke database (TJ Media) within the app. The search results automatically fill in the title, singer, and song number!
+    * You can also add songs by manually entering detailed information such as highest note and machine brand.
+    * Added songs are safely kept in your **Library**, and you can register frequently sung songs to **Favorites** for quick access.
+* **Session Recording by Date**
+    * Create a new date session and bring in songs from your library to leave a record of your passionate singing that day.
+    * Add **who sang it (performer)** to manage it even more in detail!
+* **Statistics & Rankings**
+    * Check the **ranking of your most sung songs** at a glance.
+* **Random Song Course Generator**
+    * Wondering what to sing today? It generates your own **random song course** based on the songs saved in your library.
+* **User-Customized Settings (NEW!)**
+    * You can freely toggle the theme (Light/Dark mode) and the **'Show Highest Note'** option.
+    * The configured settings are safely saved on your device and maintained even after restarting the app.
+* **Data Storage**
+    * Supports **Backup & Restore** features so you don't lose your precious records.
 
-## 💻 주요 기능 (PC)
+## 💻 Key Features (PC)
 
-* **모바일 핵심 기능 연동**
-    * 모바일 앱에서 즐기던 핵심적인 관리 기능들을 PC의 넓은 화면에서도 그대로 사용할 수 있습니다.
-* **데이터 백업 및 복구**
-    * PC 환경에서도 **백업 저장하기 및 불러오기**가 가능하여 데이터를 안전하게 관리할 수 있습니다.
-* **반주기 사이트 통합 검색**
-    * 각 반주기 브랜드 웹사이트와 연동하여 편리하게 **노래 번호와 정보를 검색**할 수 있습니다.
-
----
-💡 **설치 방법:** 아래 `Assets` 항목에서 기기에 맞는 설치 파일(APK 등)을 다운로드하여 실행해 주세요.
+* **Integration of Core Mobile Features**
+    * Enjoy the core management features you used on the mobile app directly on the wide screen of your PC.
+* **Data Backup & Restore**
+    * You can securely manage your data as **Backup & Restore** are also available in the PC environment.
+* **Integrated Search for Karaoke Machine Sites**
+    * Conveniently **search song numbers and information** by linking with the websites of each karaoke machine brand.
