@@ -7,8 +7,9 @@ Now you can systematically manage your favorite songs and records from the karao
 
 ## ✨ Key Features (Mobile)
 
-* **Manual Song Addition & Favorites**
-    * Add songs by directly entering detailed information such as title, singer, number, highest note, and machine brand.
+* **Online Search (NEW!) & Manual Song Addition**
+    * You can search for songs directly from the online karaoke database (TJ Media) within the app. The search results automatically fill in the title, singer, and song number!
+    * You can also add songs by manually entering detailed information such as highest note and machine brand.
     * Added songs are safely kept in your **Library**, and you can register frequently sung songs to **Favorites** for quick access.
 * **Session Recording by Date**
     * Create a new date session and bring in songs from your library to leave a record of your passionate singing that day.
