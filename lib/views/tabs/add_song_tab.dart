@@ -31,6 +31,13 @@ class SongResult {
 
 class _AddSongTabState extends ConsumerState<AddSongTab> {
   final List<String> _notes = ['~2옥타브 솔#', '2옥타브 라~시', '3옥타브 도~'];
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   Color _getNoteColor(String note) {
     if (note == _notes[0]) return Colors.green;
@@ -44,12 +51,39 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
   }
 
   int _compareTitles(String a, String b) {
-    bool isAHangul = RegExp(r'^[가-힣]').hasMatch(a);
-    bool isBHangul = RegExp(r'^[가-힣]').hasMatch(b);
+    int groupA = _getCharGroup(a);
+    int groupB = _getCharGroup(b);
 
-    if (isAHangul && !isBHangul) return -1;
-    if (!isAHangul && isBHangul) return 1;
+    if (groupA != groupB) return groupA.compareTo(groupB);
+
     return a.toLowerCase().compareTo(b.toLowerCase());
+  }
+
+  int _getCharGroup(String str) {
+    if (str.isEmpty) return 6;
+    final first = str[0];
+    if (RegExp(r'^[가-힣ㄱ-ㅎㅏ-ㅣ]').hasMatch(first)) return 1;
+    if (RegExp(r'^[0-9]').hasMatch(first)) return 2;
+    if (RegExp(r'^[a-zA-Z]').hasMatch(first)) return 3;
+    if (RegExp(r'^[一-龥]').hasMatch(first)) return 5;
+    if (RegExp(r'^[ぁ-んァ-ン]').hasMatch(first)) return 4;
+    return 6;
+  }
+
+  String _getIndexLabel(String title) {
+    if (title.isEmpty) return '#';
+    final first = title[0];
+    if (RegExp(r'^[가-힣]').hasMatch(first)) {
+      final code = first.codeUnitAt(0);
+      final cho = (code - 0xAC00) ~/ 28 ~/ 21;
+      const choList = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+      return choList[cho.clamp(0, choList.length - 1)];
+    }
+    if (RegExp(r'^[a-zA-Z]').hasMatch(first)) return first.toUpperCase();
+    if (RegExp(r'^[0-9]').hasMatch(first)) return '#';
+    if (RegExp(r'^[一-龥]').hasMatch(first)) return '漢';
+    if (RegExp(r'^[ぁ-んァ-ン]').hasMatch(first)) return 'あ';
+    return '#';
   }
 
   String _getSmartText(dom.Node node) {
@@ -599,61 +633,119 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
           final displaySongs = _showOnlyHighlighted
               ? sortedSongs.where((s) => s.isHighlighted).toList()
               : sortedSongs;
-          return ListView.builder(
-            itemCount: displaySongs.length + 1,
-            itemBuilder: (context, index) {
-              if (index == displaySongs.length) {
-                return const SizedBox(height: 80);
-              }
-              final song = displaySongs[index];
-              return InkWell(
-                onTap: () => ref.read(libraryViewModelProvider.notifier).toggleHighlight(song),
-                onLongPress: () => _showEditDialog(song),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: song.isHighlighted ? Colors.yellow.withOpacity(0.3) : Colors.transparent,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.grey.shade400,
-                        width: 1.0,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        child: Text('${index + 1}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                      ),
-                      Expanded(
-                        child: RichText(
-                          overflow: TextOverflow.ellipsis,
-                          text: TextSpan(
-                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                            children: [
-                              TextSpan(text: song.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                              TextSpan(text: " - ${song.originalSinger}", style: const TextStyle(fontSize: 13, color: Colors.blueGrey, fontWeight: FontWeight.w500)),
-                            ],
+
+          // 인덱스 바용 Map 생성
+          final Map<String, int> indexMap = {};
+          for (int i = 0; i < displaySongs.length; i++) {
+            final label = _getIndexLabel(displaySongs[i].title);
+            if (!indexMap.containsKey(label)) {
+              indexMap[label] = i;
+            }
+          }
+
+          return Stack(
+            children: [
+              ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(right: 28),
+                itemCount: displaySongs.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == displaySongs.length) {
+                    return const SizedBox(height: 80);
+                  }
+                  final song = displaySongs[index];
+                  return InkWell(
+                    onTap: () => ref.read(libraryViewModelProvider.notifier).toggleHighlight(song),
+                    onLongPress: () => _showEditDialog(song),
+                    child: Container(
+                      height: 50.0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: song.isHighlighted ? Colors.yellow.withOpacity(0.3) : Colors.transparent,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.grey.shade400,
+                            width: 0.5,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          if (showHighestNote)
-                            Text(song.highestNote, style: TextStyle(color: _getNoteColor(song.highestNote), fontWeight: FontWeight.bold, fontSize: 11)),
-                          Text('${song.machineBrand} ${song.songNumber}', style: TextStyle(fontSize: 10, color: _getBrandColor(song.machineBrand), fontWeight: FontWeight.bold)),
+                          SizedBox(
+                            width: 22,
+                            child: Text('${index + 1}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                          ),
+                          Expanded(
+                            child: RichText(
+                              overflow: TextOverflow.ellipsis,
+                              text: TextSpan(
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                                children: [
+                                  TextSpan(text: song.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                                  TextSpan(text: " - ${song.originalSinger}", style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (showHighestNote)
+                                Text(song.highestNote, style: TextStyle(color: _getNoteColor(song.highestNote), fontWeight: FontWeight.bold, fontSize: 10)),
+                              Text('${song.machineBrand} ${song.songNumber}', style: TextStyle(fontSize: 9, color: _getBrandColor(song.machineBrand), fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  );
+                },
+              ),
+              Positioned(
+                right: 4,
+                top: 0,
+                bottom: 0,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: indexMap.keys.map((label) {
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              final targetIndex = indexMap[label];
+                              if (targetIndex != null) {
+                                _scrollController.animateTo(
+                                  targetIndex * 50.0,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: 24,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(vertical: 1.5),
+                              child: Text(
+                                label,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
