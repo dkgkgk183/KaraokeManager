@@ -16,18 +16,49 @@ class ExtraTab extends ConsumerStatefulWidget {
 
 class _ExtraTabState extends ConsumerState<ExtraTab> {
   LibrarySong? _recommendedSong;
+  final List<String> _recentHistory = [];
+  static const int _maxHistory = 10;
+
+  LibrarySong? _weightedRandomPick(List<LibrarySong> songs) {
+    final random = Random();
+    final weights = songs.map((song) {
+      final historyIndex = _recentHistory.indexOf(song.songNumber);
+      if (historyIndex == -1) return 1.0;
+      final recency = (historyIndex + 1) / _recentHistory.length;
+      return recency * recency;
+    }).toList();
+
+    final totalWeight = weights.fold(0.0, (sum, w) => sum + w);
+    if (totalWeight == 0) return songs[random.nextInt(songs.length)];
+
+    double pick = random.nextDouble() * totalWeight;
+    for (int i = 0; i < songs.length; i++) {
+      pick -= weights[i];
+      if (pick <= 0) return songs[i];
+    }
+    return songs.last;
+  }
 
   void _recommendSong(List<LibrarySong> songs, String targetBrand) {
-    List<LibrarySong> filteredSongs = songs.where((s) => s.machineBrand == targetBrand).toList();
-    if (filteredSongs.isEmpty) {
+    final filtered = songs.where((s) => s.machineBrand == targetBrand).toList();
+    if (filtered.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$targetBrand 노래가 하나도 없잖아! 좀 등록하고 눌러!'))
+        SnackBar(content: Text('$targetBrand 노래가 하나도 없잖아! 좀 등록하고 눌러!')),
       );
       return;
     }
-    filteredSongs.shuffle();
+
+    final picked = _weightedRandomPick(filtered);
+    if (picked == null) return;
+
+    _recentHistory.remove(picked.songNumber);
+    _recentHistory.add(picked.songNumber);
+    if (_recentHistory.length > _maxHistory) {
+      _recentHistory.removeAt(0);
+    }
+
     setState(() {
-      _recommendedSong = filteredSongs.first;
+      _recommendedSong = picked;
     });
   }
 
