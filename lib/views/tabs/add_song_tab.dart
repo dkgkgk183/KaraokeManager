@@ -655,7 +655,29 @@ class _AddSongTabState extends ConsumerState<AddSongTab> {
                   }
                   final song = displaySongs[index];
                   return InkWell(
-                    onTap: () => ref.read(libraryViewModelProvider.notifier).toggleHighlight(song),
+                    onTap: () {
+                      if (song.isHighlighted) {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('즐겨찾기 제거', style: TextStyle(fontWeight: FontWeight.bold)),
+                            content: Text('"${song.title}"를 즐겨찾기에서 제거할까?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('취소')),
+                              TextButton(
+                                onPressed: () {
+                                  ref.read(libraryViewModelProvider.notifier).toggleHighlight(song);
+                                  Navigator.pop(ctx);
+                                },
+                                child: const Text('제거', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        ref.read(libraryViewModelProvider.notifier).toggleHighlight(song);
+                      }
+                    },
                     onLongPress: () => _showEditDialog(song),
                     child: Container(
                       height: 50.0,
